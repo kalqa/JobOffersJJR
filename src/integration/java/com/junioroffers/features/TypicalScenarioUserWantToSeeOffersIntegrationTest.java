@@ -3,10 +3,13 @@ package com.junioroffers.features;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.junioroffers.BaseIntegrationTest;
 import com.junioroffers.SampleJobOfferResponse;
+import com.junioroffers.domain.offer.dto.OfferResponseDto;
 import com.junioroffers.infrastructure.offer.scheduler.HttpOffersScheduler;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import static org.assertj.core.api.Assertions.assertThat;
 
 
 public class TypicalScenarioUserWantToSeeOffersIntegrationTest extends BaseIntegrationTest implements SampleJobOfferResponse {
@@ -16,15 +19,20 @@ public class TypicalScenarioUserWantToSeeOffersIntegrationTest extends BaseInteg
 
     @Test
     public void user_want_to_see_offers_but_have_to_be_logged_in_and_external_server_should_have_some_offers() {
-        //step 1: there are no offers in external HTTP server
+        // step 1: there are no offers in external HTTP server
         wireMockServer.stubFor(WireMock.get("/offers")
                 .willReturn(WireMock.aResponse()
                         .withStatus(HttpStatus.OK.value())
                         .withHeader("Content-Type", "application/json")
-                        .withBody(bodyWithFourOffersJson())));
+                        .withBody(bodyWithZeroOffersJson())));
 
-        //step 2: scheduler ran 1st time and made GET to external server and system added 0 offers to database
-        httpOffersScheduler.fetchAllOffersAndSaveAllIfNotExists();
+
+        // step 2: scheduler ran 1st time and made GET to external server and system added 0 offers to database
+        // given && when
+        List<OfferResponseDto> newOffers = httpOffersScheduler.fetchAllOffersAndSaveAllIfNotExists();
+        // then
+        assertThat(newOffers).isEmpty();
+
 
         //step 3: user tried to get JWT token by requesting POST /token with username=someUser, password=somePassword and system returned UNAUTHORIZED(401)
         //step 4: user made GET /offers with no jwt token and system returned UNAUTHORIZED(401)
