@@ -1,4 +1,4 @@
-package com.junioroffers.domain.login.dto;
+package com.junioroffers.domain.loginandregister.dto;
 
 public record RegisterUserDto(String username, String password) {
 }
